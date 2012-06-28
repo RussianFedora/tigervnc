@@ -1,0 +1,320 @@
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXButton.h tigervnc-1.1.0/unix/tx/TXButton.h
+--- tigervnc-1.1.0.orig/unix/tx/TXButton.h	2011-08-10 06:16:35.000000000 +0900
++++ tigervnc-1.1.0/unix/tx/TXButton.h	2012-06-26 12:16:21.267633988 +0900
+@@ -49,7 +49,6 @@ public:
+     setEventHandler(this);
+     setText(text_);
+     gc = XCreateGC(dpy, win(), 0, 0);
+-    XSetFont(dpy, gc, defaultFont);
+     addEventMask(ExposureMask | ButtonPressMask | ButtonReleaseMask);
+   }
+ 
+@@ -60,8 +59,8 @@ public:
+   // setText() changes the text in the button.
+   void setText(const char* text_) {
+     text.buf = rfb::strDup(text_);
+-    int textWidth = XTextWidth(defaultFS, text.buf, strlen(text.buf));
+-    int textHeight = (defaultFS->ascent + defaultFS->descent);
++    int textWidth = XmbTextEscapement(defaultFS, text.buf, strlen(text.buf));
++    int textHeight = (defaultFSascent + defaultFSdescent);
+     int newWidth = __rfbmax(width(), textWidth + xPad*2 + bevel*2);
+     int newHeight = __rfbmax(height(), textHeight + yPad*2 + bevel*2);
+     if (width() < newWidth || height() < newHeight) {
+@@ -77,9 +76,9 @@ public:
+ private:
+ 
+   void paint() {
+-    int tw = XTextWidth(defaultFS, text.buf, strlen(text.buf));
++    int tw = XmbTextEscapement(defaultFS, text.buf, strlen(text.buf));
+     int startx = (width() - tw) / 2;
+-    int starty = (height() + defaultFS->ascent - defaultFS->descent) / 2;
++    int starty = (height() + defaultFSascent - defaultFSdescent) / 2;
+     if (down || disabled_) {
+       drawBevel(gc, 0, 0, width(), height(), bevel, defaultBg, darkBg,lightBg);
+       startx++; starty++;
+@@ -88,7 +87,7 @@ private:
+     }
+ 
+     XSetForeground(dpy, gc, disabled_ ? disabledFg : defaultFg);
+-    XDrawString(dpy, win(), gc, startx, starty, text.buf, strlen(text.buf));
++    XmbDrawString(dpy, win(), defaultFS, gc, startx, starty, text.buf, strlen(text.buf));
+   }
+ 
+   virtual void handleEvent(TXWindow* w, XEvent* ev) {
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXCheckbox.h tigervnc-1.1.0/unix/tx/TXCheckbox.h
+--- tigervnc-1.1.0.orig/unix/tx/TXCheckbox.h	2011-08-10 06:16:35.000000000 +0900
++++ tigervnc-1.1.0/unix/tx/TXCheckbox.h	2012-06-26 12:16:21.268633944 +0900
+@@ -56,7 +56,6 @@ public:
+     setEventHandler(this);
+     setText(text_);
+     gc = XCreateGC(dpy, win(), 0, 0);
+-    XSetFont(dpy, gc, defaultFont);
+     addEventMask(ExposureMask| ButtonPressMask | ButtonReleaseMask);
+   }
+ 
+@@ -69,8 +68,8 @@ public:
+   void setText(const char* text_) {
+     if (text) free(text);
+     text = strdup((char*)text_);
+-    int textWidth = XTextWidth(defaultFS, text, strlen(text));
+-    int textHeight = (defaultFS->ascent + defaultFS->descent);
++    int textWidth = XmbTextEscapement(defaultFS, text, strlen(text));
++    int textHeight = (defaultFSascent + defaultFSdescent);
+     int newWidth = __rfbmax(width(), textWidth + xPad*2 + boxPad*2 + boxSize);
+     int newHeight = __rfbmax(height(), textHeight + yPad*2);
+     if (width() < newWidth || height() < newHeight) {
+@@ -104,9 +103,9 @@ private:
+                  xPad + boxPad + (boxSize - iconSize) / 2,
+                  (height() - iconSize) / 2, 1);
+     }
+-    XDrawString(dpy, win(), gc, xPad + boxSize + boxPad*2,
+-                (height() + defaultFS->ascent - defaultFS->descent) / 2,
+-                text, strlen(text));
++    XmbDrawString(dpy, win(), defaultFS, gc, xPad + boxSize + boxPad*2,
++                  (height() + defaultFSascent - defaultFSdescent) / 2,
++                  text, strlen(text));
+   }
+ 
+   virtual void handleEvent(TXWindow* w, XEvent* ev) {
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXEntry.h tigervnc-1.1.0/unix/tx/TXEntry.h
+--- tigervnc-1.1.0.orig/unix/tx/TXEntry.h	2011-08-10 06:16:35.000000000 +0900
++++ tigervnc-1.1.0/unix/tx/TXEntry.h	2012-06-26 12:16:21.269633899 +0900
+@@ -60,7 +60,7 @@ public:
+     addEventMask(ExposureMask | KeyPressMask | FocusChangeMask
+                  | ButtonPressMask);
+     text[0] = 0;
+-    int textHeight = (defaultFS->ascent + defaultFS->descent);
++    int textHeight = (defaultFSascent + defaultFSdescent);
+     int newHeight = __rfbmax(height(), textHeight + yPad*2 + bevel*2);
+     if (height() < newHeight) {
+       resize(width(), newHeight);
+@@ -104,19 +104,19 @@ private:
+       stars[i] = 0;
+       str = stars;
+     }
+-    int tw = XTextWidth(defaultFS, str, strlen(str));
++    int tw = XmbTextEscapement(defaultFS, str, strlen(str));
+     int startx = bevel + xPad;
+     if (startx + tw > width() - 2*bevel) {
+       startx = width() - 2*bevel - tw;
+     }
+-    XDrawString(dpy, win(), defaultGC, startx,
+-                (height() + defaultFS->ascent - defaultFS->descent) / 2,
+-                str, strlen(str));
++    XmbDrawString(dpy, win(), defaultFS, defaultGC, startx,
++                  (height() + defaultFSascent - defaultFSdescent) / 2,
++                  str, strlen(str));
+     if (!disabled_ && gotFocus)
+       XDrawLine(dpy, win(), defaultGC, startx+tw,
+-                (height() - defaultFS->ascent - defaultFS->descent) / 2,
++                (height() - defaultFSascent - defaultFSdescent) / 2,
+                 startx+tw,
+-                (height() + defaultFS->ascent + defaultFS->descent) / 2);
++                (height() + defaultFSascent + defaultFSdescent) / 2);
+   }
+ 
+   virtual void handleEvent(TXWindow* w, XEvent* ev) {
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXLabel.h tigervnc-1.1.0/unix/tx/TXLabel.h
+--- tigervnc-1.1.0.orig/unix/tx/TXLabel.h	2011-08-10 06:16:35.000000000 +0900
++++ tigervnc-1.1.0/unix/tx/TXLabel.h	2012-06-26 12:16:21.270633853 +0900
+@@ -55,13 +55,13 @@ public:
+     do {
+       i++;
+       if (text.buf[i] == '\n' || text.buf[i] == 0) {
+-        int tw = XTextWidth(defaultFS, &text.buf[lineStart], i-lineStart);
++        int tw = XmbTextEscapement(defaultFS, &text.buf[lineStart], i-lineStart);
+         if (tw > textWidth) textWidth = tw;
+         lineStart = i+1;
+         lines++;
+       }
+     } while (text.buf[i] != 0);
+-    int textHeight = ((defaultFS->ascent + defaultFS->descent + lineSpacing)
++    int textHeight = ((defaultFSascent + defaultFSdescent + lineSpacing)
+                       * lines);
+     int newWidth = __rfbmax(width(), textWidth + xPad*2);
+     int newHeight = __rfbmax(height(), textHeight + yPad*2);
+@@ -81,10 +81,10 @@ private:
+   }
+ 
+   int yOffset(int lineNum) {
+-    int textHeight = ((defaultFS->ascent + defaultFS->descent + lineSpacing)
++    int textHeight = ((defaultFSascent + defaultFSdescent + lineSpacing)
+                       * lines);
+-    int lineOffset = ((defaultFS->ascent + defaultFS->descent + lineSpacing)
+-                      * lineNum + defaultFS->ascent);
++    int lineOffset = ((defaultFSascent + defaultFSdescent + lineSpacing)
++                      * lineNum + defaultFSascent);
+     switch (valign) {
+     case top:    return yPad + lineOffset;
+     case bottom: return height() - yPad - textHeight + lineOffset;
+@@ -99,9 +99,9 @@ private:
+     do {
+       i++;
+       if (text.buf[i] == '\n' || text.buf[i] == 0) {
+-        int tw = XTextWidth(defaultFS, &text.buf[lineStart], i-lineStart);
+-        XDrawString(dpy, win(), defaultGC, xOffset(tw), yOffset(lineNum),
+-                    &text.buf[lineStart], i-lineStart);
++        int tw = XmbTextEscapement(defaultFS, &text.buf[lineStart], i-lineStart);
++        XmbDrawString(dpy, win(), defaultFS, defaultGC, xOffset(tw), yOffset(lineNum),
++                      &text.buf[lineStart], i-lineStart);
+         lineStart = i+1;
+         lineNum++;
+       }
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXMenu.cxx tigervnc-1.1.0/unix/tx/TXMenu.cxx
+--- tigervnc-1.1.0.orig/unix/tx/TXMenu.cxx	2011-08-10 06:16:35.000000000 +0900
++++ tigervnc-1.1.0/unix/tx/TXMenu.cxx	2012-06-26 12:16:21.271633807 +0900
+@@ -48,7 +48,7 @@ TXMenu::~TXMenu()
+ inline int TXMenu::entryHeight(int i)
+ {
+   if (text[i])
+-    return defaultFS->ascent + defaultFS->descent + bevel*2 + yPad*2;
++    return defaultFSascent + defaultFSdescent + bevel*2 + yPad*2;
+   else
+     return yPad*2 + 1;
+ }
+@@ -61,7 +61,7 @@ void TXMenu::addEntry(const char* text_,
+   id[nEntries++] = id_;
+   int tw = 0;
+   if (text_)
+-    tw = XTextWidth(defaultFS, text_, strlen(text_));
++    tw = XmbTextEscapement(defaultFS, text_, strlen(text_));
+   int newWidth = width();
+   if (tw + bevel*2 + xPad*5 + tickSize > width())
+     newWidth = tw + bevel*2 + xPad*5 + tickSize;
+@@ -94,11 +94,11 @@ void TXMenu::paint()
+       if (checked[i])
+         XCopyPlane(dpy, tick, win(), defaultGC, 0, 0, tickSize, tickSize,
+                    bevel + xPad,
+-                   y + bevel + yPad + defaultFS->ascent - tickSize, 1);
++                   y + bevel + yPad + defaultFSascent - tickSize, 1);
+ 
+-      XDrawImageString(dpy, win(), defaultGC, bevel + xPad*2 + tickSize,
+-                       y + bevel + yPad + defaultFS->ascent,
+-                       text[i], strlen(text[i]));
++      XmbDrawImageString(dpy, win(), defaultFS, defaultGC, bevel + xPad*2 + tickSize,
++                         y + bevel + yPad + defaultFSascent,
++                         text[i], strlen(text[i]));
+     } else {
+       XDrawLine(dpy, win(), defaultGC, bevel + xPad, y + entryHeight(i) / 2,
+                 width() - bevel - xPad, y + entryHeight(i) / 2);
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXWindow.cxx tigervnc-1.1.0/unix/tx/TXWindow.cxx
+--- tigervnc-1.1.0.orig/unix/tx/TXWindow.cxx	2011-08-10 06:16:35.000000000 +0900
++++ tigervnc-1.1.0/unix/tx/TXWindow.cxx	2012-06-26 12:18:35.834486931 +0900
+@@ -39,8 +39,9 @@ unsigned long TXWindow::enabledBg;
+ unsigned long TXWindow::scrollbarBg;
+ Colormap TXWindow::cmap = 0;
+ GC TXWindow::defaultGC = 0;
+-Font TXWindow::defaultFont = 0;
+-XFontStruct* TXWindow::defaultFS = 0;
++XFontSet TXWindow::defaultFS = 0;
++int TXWindow::defaultFSascent = 0;
++int TXWindow::defaultFSdescent = 0;
+ Time TXWindow::cutBufferTime = 0;
+ Pixmap TXWindow::dot = 0, TXWindow::tick = 0;
+ const int TXWindow::dotSize = 4, TXWindow::tickSize = 8;
+@@ -48,6 +49,9 @@ char* TXWindow::defaultWindowClass;
+ 
+ void TXWindow::init(Display* dpy, const char* defaultWindowClass_)
+ {
++  char **miss, *def;
++  int n_miss;
++
+   cmap = DefaultColormap(dpy,DefaultScreen(dpy));
+   wmProtocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
+   wmDeleteWindow = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+@@ -73,18 +77,20 @@ void TXWindow::init(Display* dpy, const
+   white = enabledBg = cols[5].pixel;
+   defaultGC = XCreateGC(dpy, DefaultRootWindow(dpy), 0, 0);
+   defaultFS
+-    = XLoadQueryFont(dpy, "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*");
++    = XCreateFontSet(dpy, "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*", &miss, &n_miss, &def);
+   if (!defaultFS) {
+-    defaultFS = XLoadQueryFont(dpy, "fixed");
++    defaultFS
++      = XCreateFontSet(dpy, "-*-fixed-medium-r-*-*-12-*-*-*-*-*-*-*", &miss, &n_miss, &def);
+     if (!defaultFS) {
+       fprintf(stderr,"Failed to load any font\n");
+       exit(1);
+     }
+   }
+-  defaultFont = defaultFS->fid;
++  XFontSetExtents *e = XExtentsOfFontSet(defaultFS);
++  defaultFSascent = -e->max_logical_extent.y;
++  defaultFSdescent = e->max_logical_extent.height - defaultFSascent;
+   XSetForeground(dpy, defaultGC, defaultFg);
+   XSetBackground(dpy, defaultGC, defaultBg);
+-  XSetFont(dpy, defaultGC, defaultFont);
+   XSelectInput(dpy, DefaultRootWindow(dpy), PropertyChangeMask);
+ 
+   static char dotBits[] = { 0x06, 0x0f, 0x0f, 0x06};
+@@ -263,6 +269,11 @@ void TXWindow::toplevel(const char* name
+                         int argc, char** argv, const char* windowClass,
+                         bool iconic)
+ {
++  XTextProperty prop;
++  int res;
++
++  res = XmbTextListToTextProperty(dpy, (char **)&name, 1,
++                                  XCompoundTextStyle, &prop);
+   toplevel_ = true;
+   XWMHints wmHints;
+   wmHints.flags = InputHint|StateHint;
+@@ -272,10 +283,10 @@ void TXWindow::toplevel(const char* name
+   if (!windowClass) windowClass = defaultWindowClass;
+   classHint.res_name = (char*)name;
+   classHint.res_class = (char*)windowClass;
+-  XSetWMProperties(dpy, win(), 0, 0, argv, argc,
+-                   &sizeHints, &wmHints, &classHint);
+-  XStoreName(dpy, win(), name);
+-  XSetIconName(dpy, win(), name);
++  XmbSetWMProperties(dpy, win(), 0, 0, argv, argc,
++                     &sizeHints, &wmHints, &classHint);
++  XSetWMName(dpy, win(), &prop);
++  XSetWMIconName(dpy, win(), &prop);
+   Atom protocols[10];
+   int nProtocols = 0;
+   protocols[nProtocols++] = wmTakeFocus;
+diff -pruN tigervnc-1.1.0.orig/unix/tx/TXWindow.h tigervnc-1.1.0/unix/tx/TXWindow.h
+--- tigervnc-1.1.0.orig/unix/tx/TXWindow.h	2012-06-26 12:12:18.665717061 +0900
++++ tigervnc-1.1.0/unix/tx/TXWindow.h	2012-06-26 12:16:21.272633761 +0900
+@@ -176,8 +176,9 @@ public:
+   static unsigned long scrollbarBg;
+   static GC defaultGC;
+   static Colormap cmap;
+-  static Font defaultFont;
+-  static XFontStruct* defaultFS;
++  static XFontSet defaultFS;
++  static int defaultFSascent;
++  static int defaultFSdescent;
+   static Time cutBufferTime;
+   static Pixmap dot, tick;
+   static const int dotSize, tickSize;
+diff -pruN tigervnc-1.1.0.orig/unix/vncviewer/vncviewer.cxx tigervnc-1.1.0/unix/vncviewer/vncviewer.cxx
+--- tigervnc-1.1.0.orig/unix/vncviewer/vncviewer.cxx	2012-06-26 12:12:18.667716969 +0900
++++ tigervnc-1.1.0/unix/vncviewer/vncviewer.cxx	2012-06-26 12:16:21.274633669 +0900
+@@ -31,6 +31,7 @@
+ #include <errno.h>
+ #include <signal.h>
+ #include <locale.h>
++#include <langinfo.h>
+ #include <os/os.h>
+ #include <rfb/Logger_stdio.h>
+ #include <rfb/SecurityClient.h>
+@@ -290,8 +291,15 @@ int main(int argc, char** argv)
+   // Set gettext codeset to what our GUI toolkit uses. Since we are
+   // passing strings from strerror/gai_strerror to the GUI, these must
+   // be in GUI codeset as well.
+-  bind_textdomain_codeset(PACKAGE_NAME, "iso-8859-1");
+-  bind_textdomain_codeset("libc", "iso-8859-1");
++  //
++  // hardcoding the codeset here is definitely wrong. particularly
++  // specifying iso-8859-1. it prevents to get other languages translated
++  // since gettext is relying on this value to convert strings from
++  // what PO files are encoded.
++  // not sure if vncviewer really wants to change the codeset for libc
++  // as well.
++  bind_textdomain_codeset(PACKAGE_NAME, nl_langinfo(CODESET));
++  bind_textdomain_codeset("libc", nl_langinfo(CODESET));
+ 
+   // Re-create the aboutText for the GUI, now using GUI codeset
+   snprintf(aboutText, sizeof(aboutText),
