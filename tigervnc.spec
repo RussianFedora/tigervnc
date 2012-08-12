@@ -25,6 +25,8 @@ BuildRequires:	desktop-file-utils, java-devel, jpackage-utils
 BuildRequires:	libjpeg-turbo-devel, gnutls-devel, pam-devel
 BuildRequires:	systemd-units
 
+BuildRequires:  java-1.7.0-openjdk-devel
+
 Requires(post):	systemd-units systemd-sysv chkconfig coreutils
 Requires(preun):systemd-units
 Requires(postun):systemd-units coreutils
