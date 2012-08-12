@@ -1,6 +1,6 @@
 Name:		tigervnc
 Version:	1.1.0
-Release:	5%{?dist}
+Release:	6.2%{?dist}
 Summary:	A TigerVNC remote display system
 
 Group:		User Interface/Desktops
@@ -45,10 +45,9 @@ Patch13:	tigervnc11-rh692048.patch
 Patch16:	tigervnc11-xorg111.patch
 Patch17:	tigervnc11-xorg112.patch
 Patch18:	tigervnc11-java7.patch
+Patch19:	tigervnc11-bettersed.patch
 
-# resolve http://redmine.russianfedora.ru/issues/631 and 
-# https://bugzilla.redhat.com/show_bug.cgi?id=725218
-Patch99:	vncviewer-cyr.patch
+Patch100:	vncviewer-cyr.patch
 
 %description
 Virtual Network Computing (VNC) is a remote display system which
@@ -93,7 +92,7 @@ variety of platforms. This package contains minimal installation
 of TigerVNC server, allowing others to access the desktop on your
 machine.
 
-%ifnarch s390 s390x
+%ifnarch s390 s390x %{?rhel:ppc ppc64}
 %package server-module
 Summary:	TigerVNC module to Xorg
 Group:		User Interface/X
@@ -137,6 +136,8 @@ This package contains license of the TigerVNC suite
 %patch11 -p1 -b .gethomedir
 %patch13 -p1 -b .rh692048
 
+%patch100 -p1 -b .cyrillic
+
 cp -r /usr/share/xorg-x11-server-source/* unix/xserver
 %patch16 -p1 -b .xorg111
 pushd unix/xserver
@@ -148,8 +149,7 @@ patch -p1 -b --suffix .vnc < %{SOURCE7}
 popd
 
 %patch18 -p1 -b .java7
-
-%patch99 -p1 -b .cyr
+%patch19 -p1 -b .bettersed
 
 # Use newer gettext
 sed -i 's/AM_GNU_GETTEXT_VERSION.*/AM_GNU_GETTEXT_VERSION([0.18.1])/' \
@@ -170,7 +170,6 @@ autoreconf -fiv
 	--disable-xorg --disable-xnest --disable-xvfb --disable-dmx \
 	--disable-xwin --disable-xephyr --disable-kdrive --with-pic \
 	--disable-static --disable-xinerama \
-	--disable-composite \
 	--with-default-font-path="catalogue:%{_sysconfdir}/X11/fontpath.d,built-ins" \
 	--with-fontdir=%{_datadir}/X11/fonts \
 	--with-xkb-output=%{_localstatedir}/lib/xkb \
@@ -239,7 +238,7 @@ popd
 # remove unwanted files
 rm -f  $RPM_BUILD_ROOT%{_libdir}/xorg/modules/extensions/libvnc.la
 
-%ifarch s390 s390x
+%ifarch s390 s390x %{?rhel:ppc ppc64}
 rm -f $RPM_BUILD_ROOT%{_libdir}/xorg/modules/extensions/libvnc.so
 %endif
 
@@ -291,7 +290,7 @@ fi
 %{_mandir}/man1/vncpasswd.1*
 %{_mandir}/man1/vncconfig.1*
 
-%ifnarch s390 s390x
+%ifnarch s390 s390x %{?rhel:ppc ppc64}
 %files server-module
 %defattr(-,root,root,-)
 %{_libdir}/xorg/modules/extensions/libvnc.so
@@ -306,8 +305,15 @@ fi
 %doc LICENCE.TXT
 
 %changelog
-* Thu Jun 28 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 1.1.0-5.R
-- fix cyrillic symbols in interface (rhbz#725218, rf#631)
+* Sun Aug 12 2012 Alexei Panov <me AT elemc DOT name> 1.1.0-6.2
+- Apply Cyrillic patch for vncviewer
+
+* Mon Jul 23 2012 Adam Jackson <ajax@redhat.com> 1.1.0-6.1
+- Build with the Composite extension for feature parity with other X servers
+- tigervnc11-bettersed.patch: Fix more C++ keyword abuse (Kevin E. Martin)
+
+* Wed Apr 04 2012 Adam Jackson <ajax@redhat.com> 1.1.0-6
+- RHEL exclusion for -server-module on ppc* too
 
 * Mon Mar 26 2012 Adam Tkac <atkac redhat com> - 1.1.0-5
 - clean Xvnc's /tmp environment in service file before startup
