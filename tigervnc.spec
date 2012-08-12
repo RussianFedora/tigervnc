@@ -21,7 +21,7 @@ BuildRequires:	libdrm-devel, libXt-devel, pixman-devel libXfont-devel
 BuildRequires:	libxkbfile-devel, openssl-devel, libpciaccess-devel
 BuildRequires:	mesa-libGL-devel, libXinerama-devel, ImageMagick
 BuildRequires:  freetype-devel, libXdmcp-devel
-BuildRequires:	desktop-file-utils, java-devel, jpackage-utils
+BuildRequires:	desktop-file-utils, jpackage-utils
 BuildRequires:	libjpeg-turbo-devel, gnutls-devel, pam-devel
 BuildRequires:	systemd-units
 
