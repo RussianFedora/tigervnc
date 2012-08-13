@@ -1,6 +1,6 @@
 Name:		tigervnc
 Version:	1.1.0
-Release:	6.2%{?dist}
+Release:	6.3%{?dist}
 Summary:	A TigerVNC remote display system
 
 Group:		User Interface/Desktops
@@ -32,6 +32,8 @@ Requires(preun):systemd-units
 Requires(postun):systemd-units coreutils
 Requires:	hicolor-icon-theme
 Requires:	tigervnc-license
+
+Requires:   xorg-x11-fonts-misc
 
 Provides:	vnc = 4.1.3-2, vnc-libs = 4.1.3-2
 Obsoletes:	vnc < 4.1.3-2, vnc-libs < 4.1.3-2
@@ -307,6 +309,9 @@ fi
 %doc LICENCE.TXT
 
 %changelog
+* Mon Aug 13 2012 Alexei Panov <me AT elemc DOT name> 1.1.0-6.3
+- Added xorg-x11-fonts-misc in Requires
+
 * Sun Aug 12 2012 Alexei Panov <me AT elemc DOT name> 1.1.0-6.2
 - Apply Cyrillic patch for vncviewer
 
